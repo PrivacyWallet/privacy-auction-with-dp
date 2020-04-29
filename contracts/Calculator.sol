@@ -2,8 +2,8 @@ pragma solidity >0.5.0;
 import "./DataBuyerInterface.sol";
 
 struct DataOwner {
-  uint price;
   int encrypted_data;
+  uint price;
   uint epsilon;
 }
 
@@ -92,11 +92,11 @@ contract Calculator {
   function set_data(uint price, int encrypted_data, uint epsilon, address payable _address) public {
     // TODO: assert
 
-    DataOwner memory data_owner = DataOwner({
-      encrypted_data: encrypted_data,
-      epsilon: epsilon,
-      price: price
-    });
+    DataOwner memory data_owner = DataOwner(
+      encrypted_data,
+      price,
+      epsilon
+    );
     data.insert(_address, data_owner);
   }
 
