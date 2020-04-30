@@ -10,6 +10,7 @@ struct DataOwner {
 struct IndexValue { uint keyIndex; DataOwner value; }
 struct KeyFlag { address key; bool deleted; }
 
+//https://solidity.readthedocs.io/en/v0.6.0/types.html#iterable-mappings
 struct itmap {
     mapping(address => IndexValue) data;
     KeyFlag[] keys;
@@ -23,8 +24,8 @@ library IterableMapping {
         if (keyIndex > 0)
             return true;
         else {
-            self.keys.push();
             keyIndex = self.keys.length;
+            self.keys.push();
             self.data[key].keyIndex = keyIndex + 1;
             self.keys[keyIndex].key = key;
             self.size++;
@@ -76,11 +77,11 @@ contract Calculator {
     uint budget;
   }
 
-  itmap public data;
+  itmap data;
   using IterableMapping for itmap;
   mapping(address => DataBuyer) public transactions;
 
-
+  
   // step 1
   // calculator provide construct it's contract.
   constructor() public {
