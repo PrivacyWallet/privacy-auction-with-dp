@@ -68,7 +68,7 @@ library IterableMapping {
 }
 contract Calculator {
   uint constant upper_bound = 10000000;
-  address calculator;
+  address public calculator;
 
   struct DataBuyer {
     DataBuyerInterface buyer_contract;
@@ -77,7 +77,7 @@ contract Calculator {
     uint budget;
   }
 
-  itmap data;
+  itmap public data;
   using IterableMapping for itmap;
   mapping(address => DataBuyer) public transactions;
 
@@ -93,12 +93,21 @@ contract Calculator {
   function set_data(uint price, int encrypted_data, uint epsilon, address payable _address) public {
     // TODO: assert
 
+    require(price > 0, "price should larger than 0.");
+
     DataOwner memory data_owner = DataOwner(
       encrypted_data,
       price,
       epsilon
     );
     data.insert(_address, data_owner);
+  }
+
+  function get_data() public view returns (uint price, int encrypted_data, uint epsilon) {
+    DataOwner storage data_owner = data.data[msg.sender].value;
+    price = data_owner.price;
+    encrypted_data = data_owner.encrypted_data;
+    epsilon = data_owner.epsilon;
   }
 
   // step 7
@@ -109,6 +118,9 @@ contract Calculator {
   // data buyer provide it's budget by `payable`.
   // also, one should also privide where it selection contract is.
   function bid(DataBuyerInterface data_buyer_contract) public payable {
+
+    require(data.size > 1, 
+           "data amount less than 2");
 
     // store contract address
     transactions[msg.sender].buyer_contract = data_buyer_contract;
@@ -121,14 +133,15 @@ contract Calculator {
     uint[] memory epsilon_vec = new uint[](data.size);
     int[] memory data_vec = new int[](data.size);
     address[] memory address_vec = new address[](data.size);
+    uint _i = 0;
     for(uint i = data.iterate_start();
        data.iterate_valid(i);
-       (i = data.iterate_next(i), i++)) {
+       (i = data.iterate_next(i), _i++)) {
          (address _address,DataOwner storage data_owner) = data.iterate_get(i);
-         price_vec[i] = data_owner.price;
-         epsilon_vec[i] = data_owner.epsilon;
-         data_vec[i] = data_owner.encrypted_data;
-         address_vec[i] = _address;
+         price_vec[_i] = data_owner.price;
+         epsilon_vec[_i] = data_owner.epsilon;
+         data_vec[_i] = data_owner.encrypted_data;
+         address_vec[_i] = _address;
     }
 
     uint[] memory results = DataBuyerInterface(data_buyer_contract).send_budget_and_epsilons(msg.value, epsilon_vec, price_vec);

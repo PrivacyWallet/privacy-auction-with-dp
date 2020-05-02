@@ -1,0 +1,12 @@
+{
+  "name": "privacy-auction-with-dp",
+  "version": "0.1.0",
+  "description": "2020 信安作品赛北京理工大学参赛作品",
+  "main": "index.js",
+  "repository": "git@github.com:fky2015/privacy-auction-with-dp.git",
+  "author": "FKYnJYQ <loveress01@gmail.com>",
+  "license": "GPL",
+  "devDependencies": {
+    "truffle-assertions": "^0.9.2"
+  }
+}

@@ -21,7 +21,7 @@ contract DataBuyer is DataBuyerInterface {
     function quickSort(uint[] memory arr, int left, int right) private pure{
         int i = left;
         int j = right;
-        if(i==j) return;
+        if(i>=j) return;
         uint pivot = arr[uint(left + (right - left) / 2)];
         while (i <= j) {
             while (arr[uint(i)] > pivot) i++;
@@ -53,9 +53,14 @@ contract DataBuyer is DataBuyerInterface {
       qsort(epsilons);
 
       uint[] memory sum_of_square_vec = new uint[](epsilons.length);
-      for(uint i = epsilons.length-2; i >=0 ; i--) {
-        sum_of_square_vec[i] = ((sum_of_square_vec[i+1]*
-            epsilons[i+1]**2) + epsilons[i]**2) / epsilons[i]**2;
+      for(int i = int(epsilons.length-2); i >=0 ; i--) {
+        uint i = uint(i);
+        uint t1 = epsilons[i+1]**2;
+        uint t2 = epsilons[i] ** 2;
+        uint t3 = sum_of_square_vec[i+1] * t1;
+        uint t4 = t3 + t2;
+        uint t5 = t4 / t2;
+        sum_of_square_vec[i] = t5;
       }
 
       uint[] memory theta_vec = new uint[](epsilons.length);
