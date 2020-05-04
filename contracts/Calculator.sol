@@ -5,6 +5,7 @@ struct DataOwner {
   int encrypted_data;
   uint price;
   uint epsilon;
+  address payable data_owner_address;
 }
 
 struct IndexValue { uint keyIndex; DataOwner value; }
@@ -67,12 +68,12 @@ library IterableMapping {
     }
 }
 contract Calculator {
-  uint constant upper_bound = 10000000;
+  uint constant upper_bound = 1e7;
   address public calculator;
 
   struct DataBuyer {
     DataBuyerInterface buyer_contract;
-    address[] selected_owner;
+    address payable[] selected_owner;
     uint[] selected_prices;
     uint budget;
   }
@@ -98,7 +99,8 @@ contract Calculator {
     DataOwner memory data_owner = DataOwner(
       encrypted_data,
       price,
-      epsilon
+      epsilon,
+      _address
     );
     data.insert(_address, data_owner);
   }
@@ -132,7 +134,7 @@ contract Calculator {
     uint[] memory price_vec = new uint[](data.size);
     uint[] memory epsilon_vec = new uint[](data.size);
     int[] memory data_vec = new int[](data.size);
-    address[] memory address_vec = new address[](data.size);
+    address payable[] memory address_vec = new address payable[](data.size);
     uint _i = 0;
     for(uint i = data.iterate_start();
        data.iterate_valid(i);
@@ -141,13 +143,13 @@ contract Calculator {
          price_vec[_i] = data_owner.price;
          epsilon_vec[_i] = data_owner.epsilon;
          data_vec[_i] = data_owner.encrypted_data;
-         address_vec[_i] = _address;
+         address_vec[_i] = data_owner.data_owner_address;
     }
 
     uint[] memory results = DataBuyerInterface(data_buyer_contract).send_budget_and_epsilons(msg.value, epsilon_vec, price_vec);
 
     // select data we want.
-    address[] memory result_addresses = new address[](results.length);
+    address payable[] memory result_addresses = new address payable[](results.length);
     int[] memory result_data = new int[](results.length);
     uint[] memory result_epsilons = new uint[](results.length);
     uint[] memory result_prices = new uint[](results.length);
@@ -173,15 +175,24 @@ contract Calculator {
 
   // step 9, 10
   // send money to buyer & owner.
-  function bidEnd(address data_buyer,int encrypted_result) public {
+  function bidEnd(address payable data_buyer,int encrypted_result) public {
+
+    // !QUESTION!
+    require(transactions[data_buyer].buyer_contract != DataBuyerInterface(0), 
+           "there is no transactions for current data_buyer.");
 
     uint sum = 0;
     for(uint i = 0; i < transactions[data_buyer].selected_prices.length; i++){
-      transactions[data_buyer].selected_owner[i].call{value:transactions[data_buyer].selected_prices[i] }("");
+      //transactions[data_buyer].selected_owner[i].call{value:transactions[data_buyer].selected_prices[i] }("");
+      transactions[data_buyer].selected_owner[i].transfer(transactions[data_buyer].selected_prices[i]);
       sum += transactions[data_buyer].selected_prices[i];
     }
     transactions[data_buyer].buyer_contract.send_result(encrypted_result);
-    data_buyer.call{value: transactions[data_buyer].budget-sum}("");
+    // !QUESTION!
+    data_buyer.transfer(transactions[data_buyer].budget-sum);
+
+    // !QUESTION!
+    transactions[data_buyer].buyer_contract = DataBuyerInterface(0);
 
   }
 
