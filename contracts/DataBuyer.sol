@@ -19,6 +19,10 @@ contract DataBuyer is DataBuyerInterface {
       return theta_vec;
     }
 
+    function get_result() public view returns(int _result) {
+      return result;
+    }
+
     function qsort(uint[] memory data) private pure {
        quickSort(data, int(0), int(data.length - 1));
     }
@@ -98,6 +102,7 @@ contract DataBuyer is DataBuyerInterface {
   // we select from them and return the index
   function send_budget_and_epsilons(uint budget, uint[] calldata epsilons, uint[] calldata prices) override external returns (uint[] memory){
 
+      delete result_index;
   // TODO
       theta_vec = calculate_theta_vec(budget, epsilons);
       for(uint i = 0; i< epsilons.length; i++) {

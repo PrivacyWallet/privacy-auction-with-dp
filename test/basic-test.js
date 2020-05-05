@@ -83,7 +83,7 @@ contract('DataBuyer', async accounts => {
     data = await calculator.get_data({from: accounts[4]})
     assert.equal(data.price, 4)
  
-    let result = await debug(calculator.bid(databuyer.address, {from:accounts[0], gas: 3000000, value: 1.2e7}))
+    let result = await calculator.bid(databuyer.address, {from:accounts[0], gas: 3000000, value: 1.2e7})
 
     let theta_vec = await databuyer.get_theta_vec();
     //console.debug(theta_vec.map(v=>v.toNumber()))
@@ -103,12 +103,39 @@ contract('DataBuyer', async accounts => {
 
   })
 
+  it("should overwrite older record", async () => {
+
+    let calculator = await Calculator.deployed()
+    let databuyer = await DataBuyer.deployed()
+    await calculator.set_data(1,2,1e6, accounts[1]);
+    await calculator.set_data(2,3,3e6, accounts[2]);
+    await calculator.set_data(1,2,1e6, accounts[1]);
+    await calculator.set_data(2,3,3e6, accounts[2]);
+    await calculator.set_data(1,2,5e6, accounts[3]);
+    await calculator.set_data(4,2,7e6, accounts[4]);
+    await calculator.set_data(4,2,7e6, accounts[5]);
+
+    let result = await debug(calculator.bid(databuyer.address, {from:accounts[0], gas: 3000000, value: 1.2e7}))
+
+    let theta_vec = await databuyer.get_theta_vec();
+    //console.debug(theta_vec)
+    truffleAssert.eventEmitted(result, 'data_selected', (ev) => {
+      //console.debug(ev.owners_data.map(e=> e.toNumber()));
+      return ev.owners_data.length === 5 && ev.owners_epsilon.length === 5;
+    })
+
+  }) 
+
   it("should send results normaly", async () => {
     let calculator = await Calculator.deployed();
-    let result = await calculator.bidEnd(accounts[0], 123);
+    let databuyer = await DataBuyer.deployed()
+    await calculator.set_data(1,2,1e6, accounts[1]);
+    let res = 1239723
+    await calculator.bidEnd(accounts[0], res);
 
-    console.debug(result);
-    
+    let result = await databuyer.get_result();
+
+    assert.equal(result, res)
   })
 });
 

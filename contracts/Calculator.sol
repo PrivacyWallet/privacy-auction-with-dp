@@ -169,7 +169,7 @@ contract Calculator {
     // trigger the event, tell the calculator
     // that he may continue the computation.
     
-    emit data_selected(result_data,price_vec);
+    emit data_selected(result_data,result_prices);
     
   }
 
