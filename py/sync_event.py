@@ -6,7 +6,9 @@ import dp
 global w3 
 w3= Web3(HTTPProvider('http://localhost:9545'))
 contractAddress = '0xf71087bABcC601Cf6a6F21C44Aa529447E8612c9'
+buyerAddress='0xbB098067655a0c4a35BcB121C775f3FB2237B348'
 contract = w3.eth.contract(address=contractAddress, abi=contract_abi.abi)
+buyer_contract = w3.eth.contract(address=buyerAddress, abi=contract_abi.abi1)
 accounts = w3.eth.accounts
 private_keys=['bea9bf4e01dc9ff582f4fa8a535a1dcdf637bfbe27667f0d4ad46f1e45535675'
 , '3c2df8e0ef721b197c9e1fba2062675927125860eac71edca7dd23f3e62bea3c'
@@ -23,14 +25,14 @@ def handle_event(event):
     receipt = w3.eth.waitForTransactionReceipt(event['transactionHash'])
     #print(receipt)
     result = contract.events.data_selected().processReceipt(receipt)
-    print(result[0]['args']['owners_data'])
+    print(result[0]['args'])
     nums=[]
     epsilon=[]
     for i in range (0,len(result[0]['args']['owners_epsilon'])):
         nums.append(result[0]['args']['owners_data'][i])
         epsilon.append(result[0]['args']['owners_epsilon'][i])
     res=dp.median(nums,epsilon)
-    print(res)
+    print("send result= "+str(res)+" to contract")
     tran=contract.functions.bidEnd(accounts[5],int(res)).buildTransaction({
     'gas':3000000,
     'gasPrice': w3.toWei('1', 'gwei'),
@@ -39,7 +41,8 @@ def handle_event(event):
     })
     sign_txn=w3.eth.account.signTransaction(tran,private_key=private_keys[5])
     send_txn=w3.eth.sendRawTransaction(sign_txn.rawTransaction)
-    print(send_txn)
+    result=buyer_contract.functions.get_result().call()
+    print("result is "+str(result))
 
 def log_loop(event_filter, poll_interval):
     while True:
