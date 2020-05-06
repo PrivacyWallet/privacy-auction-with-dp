@@ -76,6 +76,7 @@ contract Calculator {
     address payable[] selected_owner;
     uint[] selected_prices;
     uint budget;
+    string result_type;
   }
 
   itmap public data;
@@ -114,12 +115,12 @@ contract Calculator {
 
   // step 7
   // event to notify off-chain calculator.
-  event data_selected(int[] owners_data, uint[] owners_epsilon);
+  event data_selected(int[] owners_data, uint[] owners_epsilon, string result_type);
 
   // step 4
   // data buyer provide it's budget by `payable`.
   // also, one should also privide where it selection contract is.
-  function bid(DataBuyerInterface data_buyer_contract) public payable {
+  function bid(DataBuyerInterface data_buyer_contract, string memory result_type) public payable {
 
     require(data.size > 1, 
            "data amount less than 2");
@@ -164,12 +165,13 @@ contract Calculator {
     transactions[msg.sender].selected_owner = result_addresses;
     transactions[msg.sender].selected_prices = result_prices;
     transactions[msg.sender].budget = msg.value;
+    transactions[msg.sender].result_type = result_type;
 
     // step 7
     // trigger the event, tell the calculator
     // that he may continue the computation.
     
-    emit data_selected(result_data,result_prices);
+    emit data_selected(result_data,result_prices,result_type);
     
   }
 
