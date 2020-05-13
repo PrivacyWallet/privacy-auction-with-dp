@@ -29,11 +29,29 @@ def handle_event(event):
     nums=[]
     epsilon=[]
     for i in range (0,len(result[0]['args']['owners_epsilon'])):
-        nums.append(result[0]['args']['owners_data'][i])
+        nums.append(binascii.a2b_hex(result[0]['args']['owners_data'][i]))
         epsilon.append(result[0]['args']['owners_epsilon'][i])
-    res=dp.median(nums,epsilon)
+    with open("priv_mid.pem", "rb") as x:
+        a = x.read()
+        cipher_private = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(a))
+        for i in range(0,5):
+            nums[i] = cipher_private.decrypt(nums[i], Crypto.Random.new().read) 
+            nums[i]=int(nums[i])
+    if(result[0]['args']['result_type']=="median"):
+        res=dp.median(nums,epsilon)
+    elif(result[0]['args']['result_type']=="count"):
+        res=dp.count(nums,epsilon)
+    elif(result[0]['args']['result_type']=="mean"):
+        res=dp.mean(nums,epsilon)
     print("send result= "+str(res)+" to contract")
-    tran=contract.functions.bidEnd(accounts[5],int(res)).buildTransaction({
+    with open("pub_databuyer.pem", "rb") as x:
+        b = x.read()
+        cipher_public = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(b))
+        for i in range(0,5):
+            cipher_text=cipher_public.encrypt(str(data[i]).encode('utf-8')) # 使用公钥进行加密
+            #cipher_text[i]=int(binascii.b2a_hex(cipher_text[i]).decode('utf-8'),16)
+            print(cipher_text)  
+    tran=contract.functions.bidEnd(accounts[5],cipher_text).buildTransaction({
     'gas':3000000,
     'gasPrice': w3.toWei('1', 'gwei'),
     'from':accounts[5],
@@ -42,6 +60,11 @@ def handle_event(event):
     sign_txn=w3.eth.account.signTransaction(tran,private_key=private_keys[5])
     send_txn=w3.eth.sendRawTransaction(sign_txn.rawTransaction)
     result=buyer_contract.functions.get_result().call()
+    with open("priv_mid.pem", "rb") as x:
+        a = x.read()
+        cipher_private = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(a))
+        result= cipher_private.decrypt(result, Crypto.Random.new().read) 
+        result=int(result)
     print("result is "+str(result))
 
 def log_loop(event_filter, poll_interval):

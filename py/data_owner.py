@@ -2,6 +2,12 @@ from web3 import Web3, HTTPProvider
 import time
 import json
 import contract_abi
+import Crypto.PublicKey.RSA
+import Crypto.Cipher.PKCS1_v1_5
+import Crypto.Random
+import Crypto.Signature.PKCS1_v1_5
+import Crypto.Hash
+import binascii
 global w3 
 w3= Web3(HTTPProvider('http://localhost:9545'))
 contractAddress = '0xf71087bABcC601Cf6a6F21C44Aa529447E8612c9'
@@ -21,16 +27,24 @@ private_keys=['bea9bf4e01dc9ff582f4fa8a535a1dcdf637bfbe27667f0d4ad46f1e45535675'
 data=[1,2,3,4,5]
 epsilon=[23,69,86,74,96]
 price=[1000000,3000000,5000000,7000000,9000000]
+cipher_text=[]
+with open("pub_mid.pem", "rb") as x:
+    b = x.read()
+    cipher_public = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(b))
+    for i in range(0,5):
+        cipher_text.append(cipher_public.encrypt(str(data[i]).encode('utf-8'))) # 使用公钥进行加密
+        cipher_text[i]=binascii.b2a_hex(cipher_text[i]).decode('utf-8')
+        print(cipher_text[i])
 for i in range(0,5):
     print(i)
-    tran=contract.functions.set_data(epsilon[i],data[i],price[i],accounts[i]).buildTransaction({
+    tran=contract.functions.set_data(epsilon[i],cipher_text[i],price[i],accounts[i]).buildTransaction({
         'gas':1000000,
         'gasPrice': w3.toWei('1', 'gwei'),
         'from':accounts[i],
         'nonce' : w3.eth.getTransactionCount(accounts[i])})
     sign_txn=w3.eth.account.signTransaction(tran,private_key=private_keys[i])
     send_txn=w3.eth.sendRawTransaction(sign_txn.rawTransaction)
-tran=contract.functions.bid(buyerAddress).buildTransaction({
+tran=contract.functions.bid(buyerAddress,"median").buildTransaction({
 'gas':3000000,
 'gasPrice': w3.toWei('1', 'gwei'),
 'from':accounts[5],
