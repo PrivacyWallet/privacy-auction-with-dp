@@ -1,8 +1,9 @@
 pragma solidity >0.5.0;
+pragma experimental ABIEncoderV2;
 import "./DataBuyerInterface.sol";
 
 struct DataOwner {
-  int encrypted_data;
+  string encrypted_data;
   uint price;
   uint epsilon;
   address payable data_owner_address;
@@ -92,7 +93,7 @@ contract Calculator {
 
   // step 2
   // send encrypted data and epsilon.
-  function set_data(uint price, int encrypted_data, uint epsilon, address payable _address) public {
+  function set_data(uint price, string memory encrypted_data, uint epsilon, address payable _address) public {
     // TODO: assert
 
     require(price > 0, "price should larger than 0.");
@@ -106,7 +107,7 @@ contract Calculator {
     data.insert(_address, data_owner);
   }
 
-  function get_data() public view returns (uint price, int encrypted_data, uint epsilon) {
+  function get_data() public view returns (uint price, string  memory encrypted_data, uint epsilon) {
     DataOwner storage data_owner = data.data[msg.sender].value;
     price = data_owner.price;
     encrypted_data = data_owner.encrypted_data;
@@ -115,7 +116,7 @@ contract Calculator {
 
   // step 7
   // event to notify off-chain calculator.
-  event data_selected(int[] owners_data, uint[] owners_epsilon, string result_type);
+  event data_selected(string[] owners_data, uint[] owners_epsilon, string result_type);
 
   // step 4
   // data buyer provide it's budget by `payable`.
@@ -134,7 +135,7 @@ contract Calculator {
     // and waiting for result.
     uint[] memory price_vec = new uint[](data.size);
     uint[] memory epsilon_vec = new uint[](data.size);
-    int[] memory data_vec = new int[](data.size);
+    string[] memory data_vec = new string[](data.size);
     address payable[] memory address_vec = new address payable[](data.size);
     uint _i = 0;
     for(uint i = data.iterate_start();
@@ -151,7 +152,7 @@ contract Calculator {
 
     // select data we want.
     address payable[] memory result_addresses = new address payable[](results.length);
-    int[] memory result_data = new int[](results.length);
+    string[] memory result_data = new string[](results.length);
     uint[] memory result_epsilons = new uint[](results.length);
     uint[] memory result_prices = new uint[](results.length);
     for(uint i = 0; i < results.length; i++ ){
@@ -177,7 +178,7 @@ contract Calculator {
 
   // step 9, 10
   // send money to buyer & owner.
-  function bidEnd(address payable data_buyer,int encrypted_result) public {
+  function bidEnd(address payable data_buyer,string memory encrypted_result) public {
 
     // !QUESTION!
     require(transactions[data_buyer].buyer_contract != DataBuyerInterface(0), 

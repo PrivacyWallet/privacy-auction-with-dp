@@ -5,5 +5,5 @@ interface DataBuyerInterface {
 
   function send_budget_and_epsilons(uint budget, uint[] calldata epsilons, uint[] calldata prices) external  returns (uint[] memory);
 
-  function send_result(int result) external;
+  function send_result(string calldata result) external;
 }

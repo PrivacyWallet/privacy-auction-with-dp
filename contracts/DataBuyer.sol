@@ -1,9 +1,10 @@
+pragma experimental ABIEncoderV2;
 pragma solidity >0.5.0;
 import "./DataBuyerInterface.sol";
 
 contract DataBuyer is DataBuyerInterface {
     address dataBuyer;
-    int result;
+    string result;
     uint constant upper_bound = 1e7;
     uint[] theta_vec;
     uint[] result_index;
@@ -19,7 +20,7 @@ contract DataBuyer is DataBuyerInterface {
       return theta_vec;
     }
 
-    function get_result() public view returns(int _result) {
+    function get_result() public view returns(string memory _result) {
       return result;
     }
 
@@ -113,7 +114,7 @@ contract DataBuyer is DataBuyerInterface {
       return result_index;
    }
 
-  function send_result(int _result) override external{
+  function send_result(string calldata _result) override external{
     result = _result;
   }
 }
