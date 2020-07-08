@@ -4,6 +4,8 @@ import "./DataBuyerInterface.sol";
 
 struct DataOwner {
   string encrypted_data;
+  // unencrypted
+  string params;
   uint price;
   uint epsilon;
   address payable data_owner_address;
@@ -93,13 +95,14 @@ contract Calculator {
 
   // step 2
   // send encrypted data and epsilon.
-  function set_data(uint price, string memory encrypted_data, uint epsilon, address payable _address) public {
+  function set_data(uint price, string memory encrypted_data, string memory params, uint epsilon, address payable _address) public {
     // TODO: assert
 
     require(price > 0, "price should larger than 0.");
 
     DataOwner memory data_owner = DataOwner(
       encrypted_data,
+      params,
       price,
       epsilon,
       _address
@@ -116,7 +119,7 @@ contract Calculator {
 
   // step 7
   // event to notify off-chain calculator.
-  event data_selected(string[] owners_data, uint[] owners_epsilon, string result_type);
+  event data_selected(string[] owners_data, uint[] owners_epsilon, string result_type, string[] params);
 
   // step 4
   // data buyer provide it's budget by `payable`.
@@ -136,6 +139,7 @@ contract Calculator {
     uint[] memory price_vec = new uint[](data.size);
     uint[] memory epsilon_vec = new uint[](data.size);
     string[] memory data_vec = new string[](data.size);
+    string[] memory params = new string[](data.size);
     address payable[] memory address_vec = new address payable[](data.size);
     uint _i = 0;
     for(uint i = data.iterate_start();
@@ -145,6 +149,7 @@ contract Calculator {
          price_vec[_i] = data_owner.price;
          epsilon_vec[_i] = data_owner.epsilon;
          data_vec[_i] = data_owner.encrypted_data;
+         params[_i] = data_owner.params;
          address_vec[_i] = data_owner.data_owner_address;
     }
 
@@ -153,11 +158,13 @@ contract Calculator {
     // select data we want.
     address payable[] memory result_addresses = new address payable[](results.length);
     string[] memory result_data = new string[](results.length);
+    string[] memory result_params = new string[](results.length);
     uint[] memory result_epsilons = new uint[](results.length);
     uint[] memory result_prices = new uint[](results.length);
     for(uint i = 0; i < results.length; i++ ){
       result_addresses[i] = address_vec[results[i]];
       result_data[i] = data_vec[results[i]];
+      result_params[i] = params[results[i]];
       result_epsilons[i] = epsilon_vec[results[i]];
       result_prices[i] = price_vec[results[i]];
     }
@@ -172,7 +179,7 @@ contract Calculator {
     // trigger the event, tell the calculator
     // that he may continue the computation.
     
-    emit data_selected(result_data,result_prices,result_type);
+    emit data_selected(result_data,result_prices,result_type,result_params);
     
   }
 

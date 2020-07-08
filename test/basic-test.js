@@ -28,15 +28,15 @@ contract("DataOwner", async (accounts) => {
     let calculator = await Calculator.deployed();
     let data = await calculator.data();
     assert.strictEqual(data.words[0], 0);
-    let result = await calculator.set_data(1, "encrypted_data", 3, accounts[0]);
+    let result = await calculator.set_data(1, "encrypted_data","params" , 3, accounts[0]);
     assert.equal(result.receipt.status, true);
     data = await calculator.data();
     assert.strictEqual(data.words[0], 1);
-    result = await calculator.set_data(2, "encrypted_data hi", 8, accounts[0]);
+    result = await calculator.set_data(2, "encrypted_data hi", "params", 8, accounts[0]);
     assert.equal(result.receipt.status, true);
     data = await calculator.data();
     assert.strictEqual(data.words[0], 1);
-    result = await calculator.set_data(1, "encrypted_data", 3, accounts[2]);
+    result = await calculator.set_data(1, "encrypted_data", "params", 3, accounts[2]);
     assert.equal(result.receipt.status, true);
     data = await calculator.data();
     assert.strictEqual(data.words[0], 2);
@@ -67,11 +67,11 @@ contract("DataBuyer", async (accounts) => {
   it("should bid normaly with data given", async () => {
     let calculator = await Calculator.deployed();
     let databuyer = await DataBuyer.deployed();
-    await calculator.set_data(1, "encrypted_data 2", 1e6, accounts[1]);
-    await calculator.set_data(2, "encrypted_data 3", 3e6, accounts[2]);
-    await calculator.set_data(1, "encrypted_data 2", 5e6, accounts[3]);
-    await calculator.set_data(4, "encrypted_data 2", 7e6, accounts[4]);
-    await calculator.set_data(4, "encrypted_data 2", 9e6, accounts[5]);
+    await calculator.set_data(1, "encrypted_data 2","params",  1e6, accounts[1]);
+    await calculator.set_data(2, "encrypted_data 3","params",  3e6, accounts[2]);
+    await calculator.set_data(1, "encrypted_data 2","params",  5e6, accounts[3]);
+    await calculator.set_data(4, "encrypted_data 2","params",  7e6, accounts[4]);
+    await calculator.set_data(4, "encrypted_data 2","params",  9e6, accounts[5]);
 
     for await (const b of accounts) {
       let t = await web3.eth.getBalance(b);
@@ -116,13 +116,13 @@ contract("DataBuyer", async (accounts) => {
   it("should overwrite older record", async () => {
     let calculator = await Calculator.deployed();
     let databuyer = await DataBuyer.deployed();
-    await calculator.set_data(1, " encrypted_data 2" , 1e6, accounts[1]);
-    await calculator.set_data(2, " encrypted_data 3" , 3e6, accounts[2]);
-    await calculator.set_data(1, " encrypted_data 2" , 1e6, accounts[1]);
-    await calculator.set_data(2, " encrypted_data 3" , 3e6, accounts[2]);
-    await calculator.set_data(1, " encrypted_data 2" , 5e6, accounts[3]);
-    await calculator.set_data(4, " encrypted_data 2" , 7e6, accounts[4]);
-    await calculator.set_data(4, " encrypted_data 2" , 7e6, accounts[5]);
+    await calculator.set_data(1, " encrypted_data 2" ,"params",  1e6, accounts[1]);
+    await calculator.set_data(2, " encrypted_data 3" ,"params",  3e6, accounts[2]);
+    await calculator.set_data(1, " encrypted_data 2" ,"params",  1e6, accounts[1]);
+    await calculator.set_data(2, " encrypted_data 3" ,"params",  3e6, accounts[2]);
+    await calculator.set_data(1, " encrypted_data 2" ,"params",  5e6, accounts[3]);
+    await calculator.set_data(4, " encrypted_data 2" ,"params",  7e6, accounts[4]);
+    await calculator.set_data(4, " encrypted_data 2" ,"params",  7e6, accounts[5]);
 
     let result = await debug(
       calculator.bid(databuyer.address, "count" ,{
@@ -143,7 +143,7 @@ contract("DataBuyer", async (accounts) => {
   it("should send results normaly", async () => {
     let calculator = await Calculator.deployed();
     let databuyer = await DataBuyer.deployed();
-    await calculator.set_data(1, "encrypted_data 2", 1e6, accounts[1]);
+    await calculator.set_data(1, "encrypted_data 2","params",  1e6, accounts[1]);
     let res = "encrypted_data 12312414";
     await calculator.bidEnd(accounts[0], res);
 
