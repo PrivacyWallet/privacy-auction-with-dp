@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 def count(counts,epsilons):
     size=len(epsilons)
 
-    epsilons=f.read().split('\n')
     count=[]
     epsilon=[]
     for i in range(0,size):

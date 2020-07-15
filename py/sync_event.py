@@ -3,6 +3,13 @@ import time
 import json
 import contract_abi
 import dp
+import binascii
+import Crypto.PublicKey.RSA
+import Crypto.Cipher.PKCS1_v1_5
+import Crypto.Random
+import Crypto.Signature.PKCS1_v1_5
+import Crypto.Hash
+import json
 global w3 
 w3= Web3(HTTPProvider('http://localhost:9545'))
 contractAddress = '0xf71087bABcC601Cf6a6F21C44Aa529447E8612c9'
@@ -26,31 +33,58 @@ def handle_event(event):
     #print(receipt)
     result = contract.events.data_selected().processReceipt(receipt)
     print(result[0]['args'])
-    nums=[]
+    data=[]
+    nums_destination=[]
+    nums_days=[]
+    nums_price=[]
     epsilon=[]
     for i in range (0,len(result[0]['args']['owners_epsilon'])):
-        nums.append(binascii.a2b_hex(result[0]['args']['owners_data'][i]))
+        data.append(binascii.a2b_hex(result[0]['args']['owners_data'][i]))
         epsilon.append(result[0]['args']['owners_epsilon'][i])
     with open("priv_mid.pem", "rb") as x:
         a = x.read()
         cipher_private = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(a))
         for i in range(0,5):
-            nums[i] = cipher_private.decrypt(nums[i], Crypto.Random.new().read) 
-            nums[i]=int(nums[i])
-    if(result[0]['args']['result_type']=="median"):
-        res=dp.median(nums,epsilon)
-    elif(result[0]['args']['result_type']=="count"):
-        res=dp.count(nums,epsilon)
-    elif(result[0]['args']['result_type']=="mean"):
-        res=dp.mean(nums,epsilon)
+            data[i] = cipher_private.decrypt(data[i], Crypto.Random.new().read) 
+            data[i] =str(data[i] , encoding = "utf-8")
+    for i in range(0,5):
+        load_data=json.loads(data[i])
+        print(data[i])
+        if(load_data['destination']=='Shanghai'):
+            nums_destination.append(1)
+        else:
+            nums_destination.append(0)
+        nums_days.append(int(load_data['days']))
+        nums_price.append(int(load_data['price']))
+    # if(result[0]['args']['result_type']=="median"):
+    #     res_destination=dp.count(nums_destination,epsilon)
+    # elif(result[0]['args']['result_type']=="count"):
+    #     res_days=dp.mean(nums_days,epsilon)
+    # elif(result[0]['args']['result_type']=="mean"):
+    #     res_price=dp.median(nums_price,epsilon)
+
+    res_destination=dp.count(nums_destination,epsilon)
+    res_days=min(nums_days)
+    res_price=dp.median(nums_price,epsilon)
+    res_data = {
+    'des_count' :int(res_destination),
+    'days_mean' :int(res_days),
+    'price_median' : int(res_price)
+    }
+    res=json.dumps(res_data)
     print("send result= "+str(res)+" to contract")
-    with open("pub_databuyer.pem", "rb") as x:
+    with open("pub_buyer.pem", "rb") as x:
         b = x.read()
         cipher_public = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(b))
-        for i in range(0,5):
-            cipher_text=cipher_public.encrypt(str(data[i]).encode('utf-8')) # 使用公钥进行加密
-            #cipher_text[i]=int(binascii.b2a_hex(cipher_text[i]).decode('utf-8'),16)
-            print(cipher_text)  
+        cipher_text=cipher_public.encrypt(str(res).encode('utf-8')) # 使用公钥进行加密
+        cipher_text=binascii.b2a_hex(cipher_text).decode('utf-8')
+        print(cipher_text)
+    
+    for i in range(0,5):
+        balance=w3.eth.getBalance(accounts[i])
+        print("before buy owner balance is "+str(balance)) 
+    balance=w3.eth.getBalance(accounts[5])
+    print("before buy buyer balance is "+str(balance))  
     tran=contract.functions.bidEnd(accounts[5],cipher_text).buildTransaction({
     'gas':3000000,
     'gasPrice': w3.toWei('1', 'gwei'),
@@ -59,13 +93,19 @@ def handle_event(event):
     })
     sign_txn=w3.eth.account.signTransaction(tran,private_key=private_keys[5])
     send_txn=w3.eth.sendRawTransaction(sign_txn.rawTransaction)
-    result=buyer_contract.functions.get_result().call()
-    with open("priv_mid.pem", "rb") as x:
+    result=binascii.a2b_hex(buyer_contract.functions.get_result().call())
+    #print(result)
+    with open("priv_buyer.pem", "rb") as x:
         a = x.read()
         cipher_private = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(a))
-        result= cipher_private.decrypt(result, Crypto.Random.new().read) 
-        result=int(result)
+        result=cipher_private.decrypt(result, Crypto.Random.new().read) 
+        
     print("result is "+str(result))
+    for i in range(0,5):
+        balance=w3.eth.getBalance(accounts[i])
+        print("after buy owner balance is "+str(balance)) 
+    balance=w3.eth.getBalance(accounts[5])
+    print("after buy buyer balance is "+str(balance)) 
 
 def log_loop(event_filter, poll_interval):
     while True:
