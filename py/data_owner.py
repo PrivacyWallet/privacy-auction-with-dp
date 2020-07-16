@@ -56,7 +56,7 @@ for i in range(0,5):
     print(i)
     balance=w3.eth.getBalance(accounts[i])
     print("balance is "+str(balance))
-    tran=contract.functions.set_data(epsilon[i],cipher_text[i],price[i],accounts[i]).buildTransaction({
+    tran=contract.functions.set_data(epsilon[i],cipher_text[i]," ",price[i],accounts[i]).buildTransaction({
         'gas':1000000,
         'gasPrice': w3.toWei('1', 'gwei'),
         'from':accounts[i],
