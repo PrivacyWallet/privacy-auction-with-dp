@@ -5,6 +5,7 @@ import "./DataBuyerInterface.sol";
 contract DataBuyer is DataBuyerInterface {
     address dataBuyer;
     string result;
+    string requirements;
     uint constant upper_bound = 1e7;
     uint[] theta_vec;
     uint[] result_index;
@@ -22,6 +23,14 @@ contract DataBuyer is DataBuyerInterface {
 
     function get_result() public view returns(string memory _result) {
       return result;
+    }
+
+    function set_requirements(string memory req) public {
+      requirements = req;
+    } 
+
+    function get_requirements()  override external returns (string memory req) {
+      return requirements;
     }
 
     function qsort(uint[] memory data) private pure {
