@@ -276,4 +276,13 @@ contract("DataBuyer", async (accounts) => {
       console.log(b);
     }
   });
+
+  it("can get transaction info", async ()=>{
+    let databuyer = await DataBuyer.deployed();
+    let calculator = await Calculator.deployed();
+
+    let result = await calculator.getDataBuyerTransactionInfo(accounts[0])
+    console.log(result)
+    assert.equal(result.selected_owner.length, 5)
+  })
 });

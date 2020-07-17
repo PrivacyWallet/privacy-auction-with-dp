@@ -214,7 +214,13 @@ contract Calculator {
 
     // mark end (see `require`)
     transactions[data_buyer].buyer_contract = DataBuyerInterface(0);
+  }
 
+  function getDataBuyerTransactionInfo(address data_buyer) public view returns(address payable[] memory selected_owner, uint[] memory selected_prices, uint budget, string memory requirements) {
+    selected_owner = transactions[data_buyer].selected_owner;
+    selected_prices = transactions[data_buyer].selected_prices;
+    requirements = transactions[data_buyer].requirements;
+    return ( selected_owner, selected_prices, transactions[data_buyer].budget, requirements );
   }
 
    //say hello world
