@@ -32,7 +32,7 @@ def handle_event(event):
     receipt = w3.eth.waitForTransactionReceipt(event['transactionHash'])
     #print(receipt)
     result = contract.events.data_selected().processReceipt(receipt)
-    print(result[0]['args'])
+    print(result[0])
     data=[]
     nums_destination=[]
     nums_days=[]
