@@ -28,15 +28,33 @@ contract("DataOwner", async (accounts) => {
     let calculator = await Calculator.deployed();
     let data = await calculator.data();
     assert.strictEqual(data.words[0], 0);
-    let result = await calculator.set_data(1, "encrypted_data","params" , 3, accounts[0]);
+    let result = await calculator.set_data(
+      1,
+      "encrypted_data",
+      "params",
+      3,
+      accounts[0]
+    );
     assert.equal(result.receipt.status, true);
     data = await calculator.data();
     assert.strictEqual(data.words[0], 1);
-    result = await calculator.set_data(2, "encrypted_data hi", "params", 8, accounts[0]);
+    result = await calculator.set_data(
+      2,
+      "encrypted_data hi",
+      "params",
+      8,
+      accounts[0]
+    );
     assert.equal(result.receipt.status, true);
     data = await calculator.data();
     assert.strictEqual(data.words[0], 1);
-    result = await calculator.set_data(1, "encrypted_data", "params", 3, accounts[2]);
+    result = await calculator.set_data(
+      1,
+      "encrypted_data",
+      "params",
+      3,
+      accounts[2]
+    );
     assert.equal(result.receipt.status, true);
     data = await calculator.data();
     assert.strictEqual(data.words[0], 2);
@@ -67,11 +85,41 @@ contract("DataBuyer", async (accounts) => {
   it("should bid normaly with data given", async () => {
     let calculator = await Calculator.deployed();
     let databuyer = await DataBuyer.deployed();
-    await calculator.set_data(1, "encrypted_data 2","params",  1e6, accounts[1]);
-    await calculator.set_data(2, "encrypted_data 3","params",  3e6, accounts[2]);
-    await calculator.set_data(1, "encrypted_data 2","params",  5e6, accounts[3]);
-    await calculator.set_data(4, "encrypted_data 2","params",  7e6, accounts[4]);
-    await calculator.set_data(4, "encrypted_data 2","params",  9e6, accounts[5]);
+    await calculator.set_data(
+      1,
+      "encrypted_data 2",
+      "params",
+      1e6,
+      accounts[1]
+    );
+    await calculator.set_data(
+      2,
+      "encrypted_data 3",
+      "params",
+      3e6,
+      accounts[2]
+    );
+    await calculator.set_data(
+      1,
+      "encrypted_data 2",
+      "params",
+      5e6,
+      accounts[3]
+    );
+    await calculator.set_data(
+      4,
+      "encrypted_data 2",
+      "params",
+      7e6,
+      accounts[4]
+    );
+    await calculator.set_data(
+      4,
+      "encrypted_data 2",
+      "params",
+      9e6,
+      accounts[5]
+    );
 
     for await (const b of accounts) {
       let t = await web3.eth.getBalance(b);
@@ -86,7 +134,7 @@ contract("DataBuyer", async (accounts) => {
     data = await calculator.get_data({ from: accounts[4] });
     assert.equal(data.price, 4);
 
-    let result = await calculator.bid(databuyer.address, "mean" , {
+    let result = await calculator.bid(databuyer.address, {
       from: accounts[0],
       gas: 3000000,
       value: 1.2e7,
@@ -116,16 +164,58 @@ contract("DataBuyer", async (accounts) => {
   it("should overwrite older record", async () => {
     let calculator = await Calculator.deployed();
     let databuyer = await DataBuyer.deployed();
-    await calculator.set_data(1, " encrypted_data 2" ,"params",  1e6, accounts[1]);
-    await calculator.set_data(2, " encrypted_data 3" ,"params",  3e6, accounts[2]);
-    await calculator.set_data(1, " encrypted_data 2" ,"params",  1e6, accounts[1]);
-    await calculator.set_data(2, " encrypted_data 3" ,"params",  3e6, accounts[2]);
-    await calculator.set_data(1, " encrypted_data 2" ,"params",  5e6, accounts[3]);
-    await calculator.set_data(4, " encrypted_data 2" ,"params",  7e6, accounts[4]);
-    await calculator.set_data(4, " encrypted_data 2" ,"params",  7e6, accounts[5]);
+    await calculator.set_data(
+      10,
+      " encrypted_data 2",
+      "params",
+      1e6,
+      accounts[1]
+    );
+    await calculator.set_data(
+      20,
+      " encrypted_data 3",
+      "params",
+      3e6,
+      accounts[2]
+    );
+    await calculator.set_data(
+      10,
+      " encrypted_data 2",
+      "params",
+      1e6,
+      accounts[1]
+    );
+    await calculator.set_data(
+      20,
+      " encrypted_data 3",
+      "params",
+      3e6,
+      accounts[2]
+    );
+    await calculator.set_data(
+      10,
+      " encrypted_data 2",
+      "params",
+      5e6,
+      accounts[3]
+    );
+    await calculator.set_data(
+      40,
+      " encrypted_data 2",
+      "params",
+      7e6,
+      accounts[4]
+    );
+    await calculator.set_data(
+      40,
+      " encrypted_data 2",
+      "params",
+      7e6,
+      accounts[5]
+    );
 
     let result = await debug(
-      calculator.bid(databuyer.address, "count" ,{
+      calculator.bid(databuyer.address, {
         from: accounts[0],
         gas: 3000000,
         value: 1.2e7,
@@ -136,19 +226,54 @@ contract("DataBuyer", async (accounts) => {
     //console.debug(theta_vec)
     truffleAssert.eventEmitted(result, "data_selected", (ev) => {
       //console.debug(ev.owners_data.map(e=> e.toNumber()));
-      return ev.owners_data.length === 5 && ev.owners_epsilon.length === 5 && ev.result_type == "count";
+      return ev.owners_data.length === 5 && ev.owners_epsilon.length === 5;
     });
+  });
+
+  it("should set requirements correctly", async () => {
+    let calculator = await Calculator.deployed();
+    let databuyer = await DataBuyer.deployed();
+
+    let json = JSON.stringify({
+      hello: "world",
+    });
+
+    await databuyer.set_requirements(json);
+
+    let result = await calculator.bid(databuyer.address, {
+      from: accounts[0],
+      gas: 3000000,
+      value: 1.2e7,
+    });
+
+    truffleAssert.eventEmitted(result, "data_selected", (ev) => {
+      //console.debug(ev.owners_data.map(e=> e.toNumber()));
+      return ev.requirements == json;
+    });
+
   });
 
   it("should send results normaly", async () => {
     let calculator = await Calculator.deployed();
     let databuyer = await DataBuyer.deployed();
-    await calculator.set_data(1, "encrypted_data 2","params",  1e6, accounts[1]);
+    await calculator.set_data(
+      1,
+      "encrypted_data 2",
+      "params",
+      1e6,
+      accounts[1]
+    );
     let res = "encrypted_data 12312414";
-    await calculator.bidEnd(accounts[0], res);
+    let bidEndResult = await calculator.bidEnd(accounts[0], res);
+    console.log(bidEndResult);
 
     let result = await databuyer.get_result();
 
     assert.equal(result, res);
+
+    for (const a of accounts) {
+      let b = await web3.eth.getBalance(a);
+      console.log(b);
+    }
   });
 });

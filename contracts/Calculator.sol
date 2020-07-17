@@ -79,7 +79,7 @@ contract Calculator {
     address payable[] selected_owner;
     uint[] selected_prices;
     uint budget;
-    string result_type;
+    string requirements;
   }
 
   itmap public data;
@@ -119,12 +119,12 @@ contract Calculator {
 
   // step 7
   // event to notify off-chain calculator.
-  event data_selected(string[] owners_data, uint[] owners_epsilon, string result_type, string[] params);
+  event data_selected(string[] owners_data, uint[] owners_epsilon, string requirements, string[] params);
 
   // step 4
   // data buyer provide it's budget by `payable`.
   // also, one should also privide where it selection contract is.
-  function bid(DataBuyerInterface data_buyer_contract, string memory result_type) public payable {
+  function bid(DataBuyerInterface data_buyer_contract) public payable {
 
     require(data.size > 1, 
            "data amount less than 2");
@@ -169,17 +169,23 @@ contract Calculator {
       result_prices[i] = price_vec[results[i]];
     }
 
-    // suspend this transactions
+    // suspend this transactions.
     transactions[msg.sender].selected_owner = result_addresses;
     transactions[msg.sender].selected_prices = result_prices;
     transactions[msg.sender].budget = msg.value;
-    transactions[msg.sender].result_type = result_type;
+
+    // get requirements from data buyer.
+    // such as filter, query, query type
+    string memory requirements = DataBuyerInterface(data_buyer_contract).get_requirements();
+
+    transactions[msg.sender].requirements = requirements;
+    
 
     // step 7
     // trigger the event, tell the calculator
     // that he may continue the computation.
     
-    emit data_selected(result_data,result_prices,result_type,result_params);
+    emit data_selected(result_data,result_prices, requirements, result_params);
     
   }
 
@@ -192,16 +198,21 @@ contract Calculator {
            "there is no transactions for current data_buyer.");
 
     uint sum = 0;
+    
+    // transfer to data owner
     for(uint i = 0; i < transactions[data_buyer].selected_prices.length; i++){
       //transactions[data_buyer].selected_owner[i].call{value:transactions[data_buyer].selected_prices[i] }("");
       transactions[data_buyer].selected_owner[i].transfer(transactions[data_buyer].selected_prices[i]);
       sum += transactions[data_buyer].selected_prices[i];
     }
+
+    // send encrypted result
     transactions[data_buyer].buyer_contract.send_result(encrypted_result);
-    // !QUESTION!
+
+    // transfer to date buyer (rest of budget)
     data_buyer.transfer(transactions[data_buyer].budget-sum);
 
-    // !QUESTION!
+    // mark end (see `require`)
     transactions[data_buyer].buyer_contract = DataBuyerInterface(0);
 
   }
