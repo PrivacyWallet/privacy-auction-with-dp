@@ -226,7 +226,9 @@ contract("DataBuyer", async (accounts) => {
     //console.debug(theta_vec)
     truffleAssert.eventEmitted(result, "data_selected", (ev) => {
       //console.debug(ev.owners_data.map(e=> e.toNumber()));
-      return ev.owners_data.length === 5 && ev.owners_epsilon.length === 5;
+      console.log(ev)
+      
+      return ev.owners_data.length === 5 && ev.owners_epsilon.length === 5 && ev.data_buyer === accounts[0] && ev.data_buyer_contract === databuyer.address;
     });
   });
 
