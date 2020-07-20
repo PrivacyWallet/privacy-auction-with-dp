@@ -139,7 +139,7 @@ contract Calculator {
 
   // step 7
   // event to notify off-chain calculator.
-  event data_selected(address data_buyer,address data_buyer_contract, string requirements,string[] owners_data, uint[] owners_price, uint[] owners_epsilon,  string[] params);
+  event data_selected(address data_buyer,address data_buyer_contract, string requirements,address payable[] owners_address, string[] owners_data, uint[] owners_price, uint[] owners_epsilon,  string[] params);
 
   // step 4
   // data buyer provide it's budget by `payable`.
@@ -213,7 +213,7 @@ contract Calculator {
     // trigger the event, tell the calculator
     // that he may continue the computation.
     
-    emit data_selected(msg.sender, address(data_buyer_contract), requirements, result_data,result_prices,result_epsilons, result_params);
+    emit data_selected(msg.sender, address(data_buyer_contract), requirements,result_addresses, result_data,result_prices,result_epsilons, result_params);
     
   }
 
