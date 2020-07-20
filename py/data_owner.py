@@ -63,7 +63,7 @@ for i in range(0,5):
         'nonce' : w3.eth.getTransactionCount(accounts[i])})
     sign_txn=w3.eth.account.signTransaction(tran,private_key=private_keys[i])
     send_txn=w3.eth.sendRawTransaction(sign_txn.rawTransaction)
-tran=contract.functions.bid(buyerAddress,"median").buildTransaction({
+tran=contract.functions.bid(buyerAddress).buildTransaction({
 'gas':3000000,
 'gasPrice': w3.toWei('1', 'gwei'),
 'from':accounts[5],
@@ -71,15 +71,6 @@ tran=contract.functions.bid(buyerAddress,"median").buildTransaction({
 'value':12000000})
 sign_txn=w3.eth.account.signTransaction(tran,private_key=private_keys[5])
 send_txn=w3.eth.sendRawTransaction(sign_txn.rawTransaction)
-tran=contract.functions.bid(buyerAddress,"median").buildTransaction({
-'gas':3000000,
-'gasPrice': w3.toWei('1', 'gwei'),
-'from':accounts[6],
-'nonce' : w3.eth.getTransactionCount(accounts[6]),
-'value':12000000})
-sign_txn=w3.eth.account.signTransaction(tran,private_key=private_keys[6])
-send_txn=w3.eth.sendRawTransaction(sign_txn.rawTransaction)
-
 
     
 
