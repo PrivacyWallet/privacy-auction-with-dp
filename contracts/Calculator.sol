@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 import "./DataBuyerInterface.sol";
 
 struct DataOwner {
-  address owner;
   string encrypted_data;
   // unencrypted
   string params;
@@ -12,65 +11,65 @@ struct DataOwner {
   address payable data_owner_address;
 }
 
-//struct IndexValue { uint keyIndex; DataOwner value; }
-//struct KeyFlag { address key; bool deleted; }
+struct IndexValue { uint keyIndex; DataOwner value; }
+struct KeyFlag { address key; bool deleted; }
 
-////https://solidity.readthedocs.io/en/v0.6.0/types.html#iterable-mappings
-//struct itmap {
-    //mapping(address => IndexValue) data;
-    //KeyFlag[] keys;
-    //uint size;
-//}
+//https://solidity.readthedocs.io/en/v0.6.0/types.html#iterable-mappings
+struct itmap {
+    mapping(address => IndexValue) data;
+    KeyFlag[] keys;
+    uint size;
+}
 
-//library IterableMapping {
-    //function insert(itmap storage self, address key, DataOwner memory value) internal returns (bool replaced) {
-        //uint keyIndex = self.data[key].keyIndex;
-        //self.data[key].value = value;
-        //if (keyIndex > 0)
-            //return true;
-        //else {
-            //keyIndex = self.keys.length;
-            //self.keys.push();
-            //self.data[key].keyIndex = keyIndex + 1;
-            //self.keys[keyIndex].key = key;
-            //self.size++;
-            //return false;
-        //}
-    //}
+library IterableMapping {
+    function insert(itmap storage self, address key, DataOwner memory value) internal returns (bool replaced) {
+        uint keyIndex = self.data[key].keyIndex;
+        self.data[key].value = value;
+        if (keyIndex > 0)
+            return true;
+        else {
+            keyIndex = self.keys.length;
+            self.keys.push();
+            self.data[key].keyIndex = keyIndex + 1;
+            self.keys[keyIndex].key = key;
+            self.size++;
+            return false;
+        }
+    }
 
-    //function remove(itmap storage self, address key) internal returns (bool success) {
-        //uint keyIndex = self.data[key].keyIndex;
-        //if (keyIndex == 0)
-            //return false;
-        //delete self.data[key];
-        //self.keys[keyIndex - 1].deleted = true;
-        //self.size --;
-    //}
+    function remove(itmap storage self, address key) internal returns (bool success) {
+        uint keyIndex = self.data[key].keyIndex;
+        if (keyIndex == 0)
+            return false;
+        delete self.data[key];
+        self.keys[keyIndex - 1].deleted = true;
+        self.size --;
+    }
 
-    //function contains(itmap storage self, address key) internal view returns (bool) {
-        //return self.data[key].keyIndex > 0;
-    //}
+    function contains(itmap storage self, address key) internal view returns (bool) {
+        return self.data[key].keyIndex > 0;
+    }
 
-    //function iterate_start(itmap storage self) internal view returns (uint keyIndex) {
-        //return iterate_next(self, uint(-1));
-    //}
+    function iterate_start(itmap storage self) internal view returns (uint keyIndex) {
+        return iterate_next(self, uint(-1));
+    }
 
-    //function iterate_valid(itmap storage self, uint keyIndex) internal view returns (bool) {
-        //return keyIndex < self.keys.length;
-    //}
+    function iterate_valid(itmap storage self, uint keyIndex) internal view returns (bool) {
+        return keyIndex < self.keys.length;
+    }
 
-    //function iterate_next(itmap storage self, uint keyIndex) internal view returns (uint r_keyIndex) {
-        //keyIndex++;
-        //while (keyIndex < self.keys.length && self.keys[keyIndex].deleted)
-            //keyIndex++;
-        //return keyIndex;
-    //}
+    function iterate_next(itmap storage self, uint keyIndex) internal view returns (uint r_keyIndex) {
+        keyIndex++;
+        while (keyIndex < self.keys.length && self.keys[keyIndex].deleted)
+            keyIndex++;
+        return keyIndex;
+    }
 
-    //function iterate_get(itmap storage self, uint keyIndex) internal view returns (address key, DataOwner storage value) {
-        //key = self.keys[keyIndex].key;
-        //value = self.data[key].value;
-    //}
-//}
+    function iterate_get(itmap storage self, uint keyIndex) internal view returns (address key, DataOwner storage value) {
+        key = self.keys[keyIndex].key;
+        value = self.data[key].value;
+    }
+}
 contract Calculator {
   uint constant upper_bound = 1e7;
   address public calculator;
@@ -83,7 +82,8 @@ contract Calculator {
     string requirements;
   }
 
-  DataOwner[] public data;
+  itmap public data;
+  using IterableMapping for itmap;
   mapping(address => DataBuyer) public transactions;
 
   
@@ -101,40 +101,20 @@ contract Calculator {
     require(price > 0, "price should larger than 0.");
 
     DataOwner memory data_owner = DataOwner(
-      address(_address),
       encrypted_data,
       params,
       price,
       epsilon,
       _address
     );
-    data.push(data_owner);
+    data.insert(_address, data_owner);
   }
 
-  string[] par;
-  uint[] pri;
-  uint[] eps;
-
-  function get_data() public returns (string[] memory owner_params, uint[] memory owner_price, uint[] memory owner_epsilon) {
-    address owner = msg.sender;
-
-    delete par;
-    delete pri;
-    delete eps;
-
-    uint result_i = 0;
-    for(uint i = 0; i < data.length; i++) {
-      if(data[i].owner == owner) {
-        par.push(data[i].params);
-        pri.push(data[i].price);
-        eps.push(data[i].epsilon);
-        result_i += 1;
-        //timestamp[result_i] = data[i].timestamp;
-      }
-    }
-    owner_params = par;
-    owner_price = pri;
-    owner_epsilon = eps;
+  function get_data() public view returns (uint price, string  memory encrypted_data, uint epsilon) {
+    DataOwner storage data_owner = data.data[msg.sender].value;
+    price = data_owner.price;
+    encrypted_data = data_owner.encrypted_data;
+    epsilon = data_owner.epsilon;
   }
 
   // step 7
@@ -146,7 +126,7 @@ contract Calculator {
   // also, one should also privide where it selection contract is.
   function bid(DataBuyerInterface data_buyer_contract) public payable {
 
-    require(data.length > 1, 
+    require(data.size > 1, 
            "data amount less than 2");
 
     // store contract address
@@ -156,30 +136,22 @@ contract Calculator {
     // calculator call data_buyer's contract 
     // to provide epsilon's and budget number,
     // and waiting for result.
-    uint[] memory price_vec = new uint[](data.length);
-    uint[] memory epsilon_vec = new uint[](data.length);
-    string[] memory data_vec = new string[](data.length);
-    string[] memory params = new string[](data.length);
-    address payable[] memory address_vec = new address payable[](data.length);
-    //uint _i = 0;
-    //for(uint i = data.iterate_start();
-       //data.iterate_valid(i);
-       //(i = data.iterate_next(i), _i++)) {
-         //(address _address,DataOwner storage data_owner) = data.iterate_get(i);
-         //price_vec[_i] = data_owner.price;
-         //epsilon_vec[_i] = data_owner.epsilon;
-         //data_vec[_i] = data_owner.encrypted_data;
-         //params[_i] = data_owner.params;
-         //address_vec[_i] = data_owner.data_owner_address;
-    //}
-    for(uint i = 0; i < data.length ; i++) {
-         price_vec[i] = data[i].price;
-         epsilon_vec[i] = data[i].epsilon;
-         data_vec[i] = data[i].encrypted_data;
-         params[i] = data[i].params;
-         address_vec[i] = data[i].data_owner_address;
+    uint[] memory price_vec = new uint[](data.size);
+    uint[] memory epsilon_vec = new uint[](data.size);
+    string[] memory data_vec = new string[](data.size);
+    string[] memory params = new string[](data.size);
+    address payable[] memory address_vec = new address payable[](data.size);
+    uint _i = 0;
+    for(uint i = data.iterate_start();
+       data.iterate_valid(i);
+       (i = data.iterate_next(i), _i++)) {
+         (address _address,DataOwner storage data_owner) = data.iterate_get(i);
+         price_vec[_i] = data_owner.price;
+         epsilon_vec[_i] = data_owner.epsilon;
+         data_vec[_i] = data_owner.encrypted_data;
+         params[_i] = data_owner.params;
+         address_vec[_i] = data_owner.data_owner_address;
     }
-
 
     uint[] memory results = DataBuyerInterface(data_buyer_contract).send_budget_and_epsilons(msg.value, epsilon_vec, price_vec);
 
