@@ -16,7 +16,7 @@ db = mdb.connect(host='ali.fkynjyq.com', port=3306, user='root', passwd='example
 
 global w3 
 w3= Web3(HTTPProvider('http://localhost:9545'))
-contractAddress = '0x9846c2aCF6c147D516197F4e8CaEB05DAda7f5Ad'
+contractAddress = '0xffEaDD49a5D8862A55798F7D126D356B95057d03'
 buyerAddress='0xbB098067655a0c4a35BcB121C775f3FB2237B348'
 contract = w3.eth.contract(address=contractAddress, abi=contract_abi.abi)
 buyer_contract = w3.eth.contract(address=buyerAddress, abi=contract_abi.abi1)
@@ -57,6 +57,7 @@ def handle_event(event):
     bidstart=result[0]['transactionHash']
     hs=''.join(['%02x' %x  for x in bidstart])
     bidstart='0x'+hs
+    requirement=json.loads(result[0]['args']['requirement'])
     print(hs)
     with open("priv_mid.pem", "rb") as x:
         a = x.read()
@@ -64,29 +65,37 @@ def handle_event(event):
         for i in range(0,length1):
             data[i] = cipher_private.decrypt(data[i], Crypto.Random.new().read) 
             data[i] =str(data[i] , encoding = "utf-8")
-    for i in range(0,length1):
-        load_data=json.loads(data[i])
-        print(data[i])
-        if(load_data['destination']=='Shanghai'):
-            nums_destination.append(1)
-        else:
-            nums_destination.append(0)
-        nums_days.append(int(load_data['days']))
-        nums_price.append(int(load_data['price']))
+
     # if(result[0]['args']['result_type']=="median"):
     #     res_destination=dp.count(nums_destination,epsilon)
     # elif(result[0]['args']['result_type']=="count"):
     #     res_days=dp.mean(nums_days,epsilon)
     # elif(result[0]['args']['result_type']=="mean"):
     #     res_price=dp.median(nums_price,epsilon)
-
-    res_destination=dp.count(nums_destination,epsilon)
-    res_days=min(nums_days)
-    res_price=dp.median(nums_price,epsilon)
+    selectType=requirement['queryType']
+    resultType=requirement['resultType']
+    num_median=[]
+    num_count=[]
+    res=-1
+    if(resultType=="中位数")：
+        for i in range(0,length1):
+            temp=json.loads(data[i])
+            num_median.append(temp[selectType])
+        res=dp.median(num_median,epsilon)
+    elif(resultType=="统计个数")：
+        for i in range(0,length1):
+            temp=json.loads(data[i])
+            query=requirement['query']
+            if(data[i]==query):
+                num_count.append(1)
+            else:
+                num_count.append(0)
+        res=dp.count(num_count,epsilon)
     res_data = {
-    'des_count' :int(res_destination),
-    'days_mean' :int(res_days),
-    'price_median' : int(res_price)
+    'queryType' :requirement['queryType'],
+    'resultType' :requirement['resultType'],
+    'query' : requirement['query'],
+    'result':int(res)
     }
     res=json.dumps(res_data)
     print("send result= "+str(res)+" to contract")
@@ -141,7 +150,7 @@ def handle_event(event):
     cursor.execute(sql)
     db.commit()
     for i in range(0,length1):
-        sql="insert into dataowner values(NULL,str_to_date('"+date+"','%Y-%m-%d'),'ok','"+str(owners_price[i])+"','"+data_buyer+"','"+data_buyer_contract+"','"+owners_address[i]+"')"
+        sql="insert into dataowner values(NULL,str_to_date('"+date+"','%Y-%m-%d'),'ok','"+str(owners_price[i])+"','"+data_buyer+"','"+data_buyer_contract+"','"+owners_address[i]+"','"+bidstart"')"
         print(sql)
         cursor.execute(sql)
         db.commit()
