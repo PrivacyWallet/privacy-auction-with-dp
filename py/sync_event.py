@@ -1,3 +1,4 @@
+# coding=utf-8
 from web3 import Web3, HTTPProvider
 import time
 import json
@@ -11,17 +12,20 @@ import Crypto.Signature.PKCS1_v1_5
 import Crypto.Hash
 import json
 import pymysql as mdb
+import base64
+import traceback
 from datetime import datetime
 db = mdb.connect(host='ali.fkynjyq.com', port=3306, user='root', passwd='example', db='privace', charset='utf8')
 
 global w3 
-w3= Web3(HTTPProvider('http://localhost:9545'))
-contractAddress = '0xffEaDD49a5D8862A55798F7D126D356B95057d03'
+w3= Web3(HTTPProvider('http://localhost:8545'))
+contractAddress = '0x7a841802AaF8F5186f934512E6A233351D775103'
 buyerAddress='0xbB098067655a0c4a35BcB121C775f3FB2237B348'
 contract = w3.eth.contract(address=contractAddress, abi=contract_abi.abi)
-buyer_contract = w3.eth.contract(address=buyerAddress, abi=contract_abi.abi1)
+
 accounts = w3.eth.accounts
-private_keys=['bea9bf4e01dc9ff582f4fa8a535a1dcdf637bfbe27667f0d4ad46f1e45535675'
+#改第一个私钥就可以,还得改contractaddress,也就是calc合约地址
+private_keys=['0c706b730a51f18d7563a85946a3e38f37d9db207642307edacd2055588fa316'
 , '3c2df8e0ef721b197c9e1fba2062675927125860eac71edca7dd23f3e62bea3c'
 , 'abe4e5a5972c6a6383b30e439d8f820145f3c35c09c2c6c3b630c444e2577e36'
 , '7975186f9faa4c494ad7e58638640c0e223d4aea6154b55b77ff61bc12ca9a40'
@@ -44,28 +48,30 @@ def handle_event(event):
     epsilon=[]
     owners_address=[]
     owners_price=[]
-    #length1=len(result[0]['args']['owners_epsilon'])
-    length1=5
+    length1=len(result[0]['args']['owners_epsilon'])
+    #length1=3
     for i in range (0,length1):
-        data.append(binascii.a2b_hex(result[0]['args']['owners_data'][i]))
+        data.append(base64.b64decode(result[0]['args']['owners_data'][i]))
         epsilon.append(result[0]['args']['owners_epsilon'][i])
         owners_address.append(result[0]['args']['owners_address'][i])
         owners_price.append(result[0]['args']['owners_price'][i])
     data_buyer_contract=result[0]['args']['data_buyer_contract']
+    buyer_contract = w3.eth.contract(address=data_buyer_contract, abi=contract_abi.abi1)
     data_buyer=result[0]['args']['data_buyer']
     Calc_address=result[0]['args']['params'][0]
     bidstart=result[0]['transactionHash']
     hs=''.join(['%02x' %x  for x in bidstart])
     bidstart='0x'+hs
-    requirement=json.loads(result[0]['args']['requirement'])
+    requirement=json.loads(result[0]['args']['requirements'])
     print(hs)
+    print(data)
     with open("priv_mid.pem", "rb") as x:
         a = x.read()
         cipher_private = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(a))
         for i in range(0,length1):
             data[i] = cipher_private.decrypt(data[i], Crypto.Random.new().read) 
             data[i] =str(data[i] , encoding = "utf-8")
-
+    print(data)
     # if(result[0]['args']['result_type']=="median"):
     #     res_destination=dp.count(nums_destination,epsilon)
     # elif(result[0]['args']['result_type']=="count"):
@@ -76,17 +82,18 @@ def handle_event(event):
     resultType=requirement['resultType']
     num_median=[]
     num_count=[]
-    res=-1
-    if(resultType=="中位数")：
+    res=0
+    if(resultType=="中位数"):
         for i in range(0,length1):
             temp=json.loads(data[i])
             num_median.append(temp[selectType])
         res=dp.median(num_median,epsilon)
-    elif(resultType=="统计个数")：
+    elif(resultType=="统计个数"):
         for i in range(0,length1):
             temp=json.loads(data[i])
             query=requirement['query']
-            if(data[i]==query):
+            print(query,temp[selectType])
+            if(temp[selectType]==query):
                 num_count.append(1)
             else:
                 num_count.append(0)
@@ -106,18 +113,13 @@ def handle_event(event):
         cipher_text=binascii.b2a_hex(cipher_text).decode('utf-8')
         print(cipher_text)
     
-    for i in range(0,length1):
-        balance=w3.eth.getBalance(accounts[i])
-        print("before buy owner balance is "+str(balance)) 
-    balance=w3.eth.getBalance(accounts[5])
-    print("before buy buyer balance is "+str(balance))  
-    tran=contract.functions.bidEnd(accounts[5],cipher_text).buildTransaction({
+    tran=contract.functions.bidEnd(data_buyer,cipher_text).buildTransaction({
     'gas':3000000,
     'gasPrice': w3.toWei('1', 'gwei'),
-    'from':accounts[5],
-    'nonce' : w3.eth.getTransactionCount(accounts[5])
+    'from':accounts[0],
+    'nonce' : w3.eth.getTransactionCount(accounts[0])
     })
-    sign_txn=w3.eth.account.signTransaction(tran,private_key=private_keys[5])
+    sign_txn=w3.eth.account.signTransaction(tran,private_key=private_keys[0])
     send_txn=w3.eth.sendRawTransaction(sign_txn.rawTransaction)
     hs=''.join(['%02x' %x  for x in send_txn])
     bidend='0x'+hs
@@ -129,11 +131,6 @@ def handle_event(event):
         result=cipher_private.decrypt(result, Crypto.Random.new().read) 
         
     print("result is "+str(result))
-    for i in range(0,length1):
-        balance=w3.eth.getBalance(accounts[i])
-        print("after buy owner balance is "+str(balance)) 
-    balance=w3.eth.getBalance(accounts[5])
-    print("after buy buyer balance is "+str(balance))
     trandatas=[]
     for i in range(0,length1):
         trandata={ 'to': owners_address[i],'payment': owners_price[i],}
@@ -150,16 +147,20 @@ def handle_event(event):
     cursor.execute(sql)
     db.commit()
     for i in range(0,length1):
-        sql="insert into dataowner values(NULL,str_to_date('"+date+"','%Y-%m-%d'),'ok','"+str(owners_price[i])+"','"+data_buyer+"','"+data_buyer_contract+"','"+owners_address[i]+"','"+bidstart"')"
+        sql="insert into dataowner values(NULL,str_to_date('"+date+"','%Y-%m-%d'),'ok','"+str(owners_price[i])+"','"+data_buyer+"','"+data_buyer_contract+"','"+owners_address[i]+"','"+bidstart+"')"
         print(sql)
         cursor.execute(sql)
         db.commit()
 
 def log_loop(event_filter, poll_interval):
-    while True:
-        for event in event_filter.get_new_entries():
-            handle_event(event)
-            time.sleep(poll_interval)
-
+    try:
+        while True:
+            for event in event_filter.get_new_entries():
+                handle_event(event)
+                time.sleep(poll_interval)
+    except Exception as e:
+        print("error!"+e)
+        #traceback.print_exc()
+        #print ('traceback.format_exc():\n%s' % traceback.format_exc())
 block_filter = w3.eth.filter({'fromBlock':'latest', 'address':contractAddress})
 log_loop(block_filter, 2)
