@@ -61,6 +61,7 @@ def handle_event(event):
         for i in range(0,length1):
             data[i] = cipher_private.decrypt(data[i], Crypto.Random.new().read) 
             data[i] =str(data[i] , encoding = "utf-8")
+            print(data[i])
     print(data)
     # if(result[0]['args']['result_type']=="median"):
     #     res_destination=dp.count(nums_destination,epsilon)
