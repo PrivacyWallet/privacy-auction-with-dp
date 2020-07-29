@@ -19,22 +19,12 @@ db = mdb.connect(host='ali.fkynjyq.com', port=3306, user='root', passwd='example
 
 global w3 
 w3= Web3(HTTPProvider('http://localhost:8545'))
-contractAddress = '0x7a841802AaF8F5186f934512E6A233351D775103'
-buyerAddress='0xbB098067655a0c4a35BcB121C775f3FB2237B348'
+contractAddress = '0x9791a37D3528F7cEB622080812cFC933E34d1BCC'
 contract = w3.eth.contract(address=contractAddress, abi=contract_abi.abi)
 
 accounts = w3.eth.accounts
 #改第一个私钥就可以,还得改contractaddress,也就是calc合约地址
-private_keys=['0c706b730a51f18d7563a85946a3e38f37d9db207642307edacd2055588fa316'
-, '3c2df8e0ef721b197c9e1fba2062675927125860eac71edca7dd23f3e62bea3c'
-, 'abe4e5a5972c6a6383b30e439d8f820145f3c35c09c2c6c3b630c444e2577e36'
-, '7975186f9faa4c494ad7e58638640c0e223d4aea6154b55b77ff61bc12ca9a40'
-, '66a55c5f943118e284f74e64f5c8be5cffe55ab7ae045c3ec603efbdf14e7797'
-, '5786411c8be0ee30e88f3eb6e9d30d86c14828d7d0c7b1b257fc2da58116e5c6'
-, 'dce48224fa51ec3c14c48fc22610100e385bf3a345482394984b421092fed51d'
-, '95efd413c2c28396fe8f6d57220dfa8500a63836c2af1c6236a2b2300b693566'
-, '748738d532d170e98c9e8a6fecdce52ae70e5830819c70e208637c5604a3dcd5'
-, 'b816c10ce07861c789d2188805554153aaff462a1fd3c6caa07891f1ed1602b1']
+private_keys=['b27476ab27a27ab8f228164d90a407587be0dfe059eb33d8508f280136071ba7']
 
 def handle_event(event):
     receipt = w3.eth.waitForTransactionReceipt(event['transactionHash'])
