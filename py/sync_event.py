@@ -55,12 +55,13 @@ def handle_event(event):
     requirement=json.loads(result[0]['args']['requirements'])
     print(hs)
     print(data)
+    print(type(data[0]))
     with open("priv_mid.pem", "rb") as x:
         a = x.read()
         cipher_private = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(a))
         for i in range(0,length1):
-            data[i] = cipher_private.decrypt(data[i], Crypto.Random.new().read) 
-            data[i] =str(data[i] , encoding = "utf-8")
+            data[i] = cipher_private.decrypt(data[i], Crypto.Random.new().read)
+            data[i] = data[i].decode('utf-8')
             print(data[i])
     print(data)
     # if(result[0]['args']['result_type']=="median"):
@@ -150,7 +151,8 @@ def log_loop(event_filter, poll_interval):
                 handle_event(event)
                 time.sleep(poll_interval)
     except Exception as e:
-        print("error!"+str(e))
+        print("error!" + str(e))
+        e.with_traceback()
         #traceback.print_exc()
         #print ('traceback.format_exc():\n%s' % traceback.format_exc())
 block_filter = w3.eth.filter({'fromBlock':'latest', 'address':contractAddress})
