@@ -149,7 +149,7 @@ def log_loop(event_filter, poll_interval):
                 handle_event(event)
                 time.sleep(poll_interval)
     except Exception as e:
-        print("error!"+e)
+        print("error!"+str(e))
         #traceback.print_exc()
         #print ('traceback.format_exc():\n%s' % traceback.format_exc())
 block_filter = w3.eth.filter({'fromBlock':'latest', 'address':contractAddress})
