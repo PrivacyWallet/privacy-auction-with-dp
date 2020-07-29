@@ -20,7 +20,7 @@ db = mdb.connect(host='ali.fkynjyq.com', port=3306, user='root', passwd='example
 global w3 
 w3= Web3(HTTPProvider('http://localhost:8545'))
 contractAddress = '0x7a841802AaF8F5186f934512E6A233351D775103'
-buyerAddress='0xbB098067655a0c4a35BcB121C775f3FB2237B348'
+
 contract = w3.eth.contract(address=contractAddress, abi=contract_abi.abi)
 
 accounts = w3.eth.accounts
@@ -71,6 +71,7 @@ def handle_event(event):
         for i in range(0,length1):
             data[i] = cipher_private.decrypt(data[i], Crypto.Random.new().read) 
             data[i] =str(data[i] , encoding = "utf-8")
+            print(data[i])
     print(data)
     # if(result[0]['args']['result_type']=="median"):
     #     res_destination=dp.count(nums_destination,epsilon)
