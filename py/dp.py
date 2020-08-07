@@ -42,8 +42,12 @@ def count(counts,epsilons):
     for i in range(0,size+1):
         pos[i]=pos[i]/sum1
     a2 = numpy.random.choice(a=[i for i in range(0,size+1)], size=1, replace=False, p=pos)
-    print("count is "+str(x)+", and result is "+str(a2[0]-1))
-    return a2[0]-1
+    if(a2[0]<1):
+        res=0
+    else:
+        res=a2[0]-1
+    print("count is "+str(x)+", and result is "+str(res))
+    return res
 def median(nums,epsilons):
     quantity=len(epsilons)
     epsilon=[]
