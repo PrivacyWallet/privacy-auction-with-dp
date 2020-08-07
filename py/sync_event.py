@@ -30,7 +30,20 @@ def handle_event(event):
     receipt = w3.eth.waitForTransactionReceipt(event['transactionHash'])
     #print(receipt)
     result = contract.events.data_selected().processReceipt(receipt)
-    print(result[0])
+    print("=======================收到新交易===========================")
+    print("交易信息如下：")
+    print("数据购买者账户地址:"+str(result[0]['args']['data_buyer']))
+    print("本次数据购买交易id:"+str(result[0]['transactionHash'])+",Calc合约地址:"+str(result[0]['args']['data_buyer_contract'])+",数据购买者合约地址:"+str(result[0]['args']['data_buyer_contract']))
+    print("选中的数据者如下：")
+    print(result[0]['args']['owners_address'])
+    print("数据所有者的隐私保护参数(epsilon):")
+    print(result[0]['args']['owners_epsilon'])
+    print("数据所有者的价格(price):")
+    print(result[0]['args']['owners_price'])
+    print("数据所有者的数据(加密的):")
+    print(result[0]['args']['owners_data'])
+    print("数据所有者的数据(加密的):")
+    print(result[0]['args']['owners_data'])
     data=[]
     nums_destination=[]
     nums_days=[]
@@ -53,9 +66,7 @@ def handle_event(event):
     hs=''.join(['%02x' %x  for x in bidstart])
     bidstart='0x'+hs
     requirement=json.loads(result[0]['args']['requirements'])
-    print(hs)
-    print(data)
-    print(type(data[0]))
+    print("使用中间计算者私钥解密数据...")
     with open("priv_mid.pem", "rb") as x:
         a = x.read()
         cipher_private = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(a))
@@ -63,6 +74,7 @@ def handle_event(event):
             data[i] = cipher_private.decrypt(data[i], Crypto.Random.new().read)
             data[i] = data[i].decode('utf-8')
             print(data[i])
+    print("解密后的结果为:")
     print(data)
     # if(result[0]['args']['result_type']=="median"):
     #     res_destination=dp.count(nums_destination,epsilon)
@@ -72,6 +84,7 @@ def handle_event(event):
     #     res_price=dp.median(nums_price,epsilon)
     selectType=requirement['queryType']
     resultType=requirement['resultType']
+    print("本次请求的参数为:"+str(selectType)+"请求的结果类型为:"+str(resultType))
     num_median=[]
     num_count=[]
     res=0
@@ -84,7 +97,6 @@ def handle_event(event):
         for i in range(0,length1):
             temp=json.loads(data[i])
             query=requirement['query']
-            print(query,temp[selectType])
             if(temp[selectType]==query):
                 num_count.append(1)
             else:
@@ -97,13 +109,13 @@ def handle_event(event):
     'result':int(res)
     }
     res=json.dumps(res_data)
-    print("send result= "+str(res)+" to contract")
+    print("查分隐私的结果为:"+str(res)+",将结果保存到合约")
     with open("pub_buyer.pem", "rb") as x:
         b = x.read()
         cipher_public = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(b))
         cipher_text=cipher_public.encrypt(str(res).encode('utf-8')) # 使用公钥进行加密
         cipher_text=binascii.b2a_hex(cipher_text).decode('utf-8')
-        print(cipher_text)
+        print("加密后的结果为:"+str(cipher_text))
     
     tran=contract.functions.bidEnd(data_buyer,cipher_text).buildTransaction({
     'gas':3000000,
@@ -122,7 +134,7 @@ def handle_event(event):
         cipher_private = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(a))
         result=cipher_private.decrypt(result, Crypto.Random.new().read) 
         
-    print("result is "+str(result))
+    print("从合约中获取结果并读取结果为:"+str(result))
     trandatas=[]
     for i in range(0,length1):
         trandata={ 'to': owners_address[i],'payment': owners_price[i],}
@@ -130,19 +142,18 @@ def handle_event(event):
     trandatastr=json.dumps(trandatas)
     cursor = db.cursor()
     date = datetime.now().strftime("%Y-%m-%d")
-    print(date)
     result=str(result)
-    print(result)
     #Calc_address=" "
     sql="insert into databuyer values(NULL,'"+bidstart+"','"+bidend+"',str_to_date('"+date+"','%Y-%m-%d'),'ok','"+Calc_address+"','"+data_buyer_contract+"','"+trandatastr+"','"+result[2:-1]+"','"+data_buyer+"')"
-    print(sql)
+    print("将结果保存到数据库,sql语句为:"+str(sql))
     cursor.execute(sql)
     db.commit()
     for i in range(0,length1):
         sql="insert into dataowner values(NULL,str_to_date('"+date+"','%Y-%m-%d'),'ok','"+str(owners_price[i])+"','"+data_buyer+"','"+data_buyer_contract+"','"+owners_address[i]+"','"+bidstart+"')"
-        print(sql)
+        print("将结果保存到数据库,sql语句为:"+str(sql))
         cursor.execute(sql)
         db.commit()
+    print("=======================交易完成!===========================")
 
 def log_loop(event_filter, poll_interval):
     try:
