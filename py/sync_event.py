@@ -84,6 +84,7 @@ def handle_event(event):
     #     res_price=dp.median(nums_price,epsilon)
     selectType=requirement['queryType']
     resultType=requirement['resultType']
+    buyerRSAPub=requirement['publickey']
     print("本次请求的参数为:"+str(selectType)+"请求的结果类型为:"+str(resultType))
     num_median=[]
     num_count=[]
@@ -109,13 +110,12 @@ def handle_event(event):
     'result':int(res)
     }
     res=json.dumps(res_data)
-    print("查分隐私的结果为:"+str(res)+",将结果保存到合约")
-    with open("pub_buyer.pem", "rb") as x:
-        b = x.read()
-        cipher_public = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(b))
-        cipher_text=cipher_public.encrypt(str(res).encode('utf-8')) # 使用公钥进行加密
-        cipher_text=binascii.b2a_hex(cipher_text).decode('utf-8')
-        print("加密后的结果为:"+str(cipher_text))
+    print("差分隐私的结果为:"+str(res)+",将结果保存到合约")
+    
+    cipher_public = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(buyerRSAPub))
+    cipher_text=cipher_public.encrypt(str(res).encode('utf-8')) # 使用公钥进行加密
+    cipher_text=binascii.b2a_hex(cipher_text).decode('utf-8')
+    print("加密后的结果为:"+str(cipher_text))
     
     tran=contract.functions.bidEnd(data_buyer,cipher_text).buildTransaction({
     'gas':3000000,
@@ -134,7 +134,7 @@ def handle_event(event):
         cipher_private = Crypto.Cipher.PKCS1_v1_5.new(Crypto.PublicKey.RSA.importKey(a))
         result=cipher_private.decrypt(result, Crypto.Random.new().read) 
         
-    print("从合约中获取结果并读取结果为:"+str(result))
+    print("从合约中获取结果并解密读取结果为:"+str(result))
     trandatas=[]
     for i in range(0,length1):
         trandata={ 'to': owners_address[i],'payment': owners_price[i],}
@@ -144,7 +144,7 @@ def handle_event(event):
     date = datetime.now().strftime("%Y-%m-%d")
     result=str(result)
     #Calc_address=" "
-    sql="insert into databuyer values(NULL,'"+bidstart+"','"+bidend+"',str_to_date('"+date+"','%Y-%m-%d'),'ok','"+Calc_address+"','"+data_buyer_contract+"','"+trandatastr+"','"+result[2:-1]+"','"+data_buyer+"')"
+    sql="insert into databuyer values(NULL,'"+bidstart+"','"+bidend+"',str_to_date('"+date+"','%Y-%m-%d'),'ok','"+Calc_address+"','"+data_buyer_contract+"','"+trandatastr+"','"+str(cipher_text)+"','"+data_buyer+"')"
     print("将结果保存到数据库,sql语句为:"+str(sql))
     cursor.execute(sql)
     db.commit()
