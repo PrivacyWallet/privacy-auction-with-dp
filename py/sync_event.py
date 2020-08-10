@@ -14,6 +14,7 @@ import json
 import pymysql as mdb
 import base64
 import traceback
+from pprint import pprint as print
 from datetime import datetime
 db = mdb.connect(host='ali.fkynjyq.com', port=3306, user='root', passwd='example', db='privace', charset='utf8')
 
@@ -40,8 +41,6 @@ def handle_event(event):
     print(result[0]['args']['owners_epsilon'])
     print("数据所有者的价格(price):")
     print(result[0]['args']['owners_price'])
-    print("数据所有者的数据(加密的):")
-    print(result[0]['args']['owners_data'])
     print("数据所有者的数据(加密的):")
     print(result[0]['args']['owners_data'])
     data=[]
