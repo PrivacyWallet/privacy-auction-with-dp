@@ -21,8 +21,8 @@ def count(counts,epsilons):
             epsilon_one.append(epsilon[i])
         else:
             epsilon_zero.append(epsilon[i])
-    epsilon_one.sort()
-    epsilon_zero.sort()
+    epsilon_one.sort(reverse = True)
+    epsilon_zero.sort(reverse = True)
     for i in range(0,size+1):
         if(i<x):    
             num=x-i
@@ -73,7 +73,7 @@ def median(nums,epsilons):
                     loc=j
         #print(loc)
             epsilon_tmp=[epsilon[i] for i in range (loc+1,quantity)]
-            epsilon_tmp.sort()
+            epsilon_tmp.sort(reverse = True)
         #print(epsilon_tmp)
             times=mid-loc
         #print(times)
@@ -90,7 +90,7 @@ def median(nums,epsilons):
                 if number>data[j][0]:
                     loc=j+1
             epsilon_tmp=[epsilon[i] for i in range (0,loc+1)]
-            epsilon_tmp.sort()
+            epsilon_tmp.sort(reverse = True)
         #print(epsilon_tmp)
             times=loc-mid
         #print(times)
@@ -113,7 +113,7 @@ def min(nums,epsilons):
         data1=(int(nums[i]),float(epsilons[i]))
         data.append(data1)
         epsilon.append(float(epsilons[i]/100))
-    data.sort(key=lambda x:x[0],reverse=False)
+    data.sort(key=lambda x:x[0],reverse=True)
     lo=data[0][0]
     hi=data[quantity-1][0]
     size=hi-lo+1
