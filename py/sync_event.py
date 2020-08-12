@@ -16,7 +16,7 @@ import base64
 import traceback
 from pprint import pprint as print
 from datetime import datetime
-db = mdb.connect(host='ali.fkynjyq.com', port=3306, user='root', passwd='example', db='privace', charset='utf8')
+
 
 global w3 
 w3 = Web3(HTTPProvider('http://localhost:8545'))
@@ -29,6 +29,7 @@ accounts = w3.eth.accounts
 private_keys=['60099cf62c84d7ffb23c9bf4b42b3fb27b8a5893c5d005ece1d8808ea984bc24']
 
 def handle_event(event):
+    db = mdb.connect(host='ali.fkynjyq.com', port=3306, user='root', passwd='example', db='privace', charset='utf8')
     receipt = w3.eth.waitForTransactionReceipt(event['transactionHash'])
     #print(receipt)
     result = contract.events.data_selected().processReceipt(receipt)
@@ -52,7 +53,6 @@ def handle_event(event):
     owners_address=[]
     owners_price=[]
     length1=len(result[0]['args']['owners_epsilon'])
-    #length1=3
     for i in range (0,length1):
         data.append(base64.b64decode(result[0]['args']['owners_data'][i]))
         epsilon.append(result[0]['args']['owners_epsilon'][i])
