@@ -19,13 +19,14 @@ from datetime import datetime
 db = mdb.connect(host='ali.fkynjyq.com', port=3306, user='root', passwd='example', db='privace', charset='utf8')
 
 global w3 
-w3= Web3(HTTPProvider('http://localhost:8545'))
-contractAddress = '0x9791a37D3528F7cEB622080812cFC933E34d1BCC'
+w3 = Web3(HTTPProvider('http://localhost:8545'))
+print(f"connected to {w3}")
+contractAddress = '0xF8e52501e00aFe56EEc7ccB63B94550c5B231c30'
 contract = w3.eth.contract(address=contractAddress, abi=contract_abi.abi)
 
 accounts = w3.eth.accounts
 #改第一个私钥就可以,还得改contractaddress,也就是calc合约地址
-private_keys=['b27476ab27a27ab8f228164d90a407587be0dfe059eb33d8508f280136071ba7']
+private_keys=['60099cf62c84d7ffb23c9bf4b42b3fb27b8a5893c5d005ece1d8808ea984bc24']
 
 def handle_event(event):
     receipt = w3.eth.waitForTransactionReceipt(event['transactionHash'])

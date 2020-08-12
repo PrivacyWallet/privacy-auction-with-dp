@@ -2,7 +2,7 @@ import math
 import operator
 import numpy
 import random
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 def count(counts,epsilons):
     size=len(epsilons)
 
