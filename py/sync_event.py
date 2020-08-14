@@ -73,7 +73,6 @@ def handle_event(event):
         for i in range(0,length1):
             data[i] = cipher_private.decrypt(data[i], Crypto.Random.new().read)
             data[i] = data[i].decode('utf-8')
-            print(data[i])
     print("解密后的结果为:")
     print(data)
     # if(result[0]['args']['result_type']=="median"):
