@@ -143,12 +143,12 @@ def handle_event(event):
     dt=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     result=str(result)
     #Calc_address=" "
-    sql="insert into databuyer values(NULL,'"+bidstart+"','"+bidend+"',"+dt+",'ok','"+Calc_address+"','"+data_buyer_contract+"','"+trandatastr+"','"+str(cipher_text)+"','"+data_buyer+"')"
+    sql="insert into databuyer values(NULL,'"+bidstart+"','"+bidend+"','"+dt+"','ok','"+Calc_address+"','"+data_buyer_contract+"','"+trandatastr+"','"+str(cipher_text)+"','"+data_buyer+"')"
     print("将结果保存到数据库,sql语句为:"+str(sql))
     cursor.execute(sql)
     db.commit()
     for i in range(0,length1):
-        sql="insert into dataowner values(NULL,"+dt+",'ok','"+str(owners_price[i])+"','"+data_buyer+"','"+data_buyer_contract+"','"+owners_address[i]+"','"+bidstart+"')"
+        sql="insert into dataowner values(NULL,'"+dt+"','ok','"+str(owners_price[i])+"','"+data_buyer+"','"+data_buyer_contract+"','"+owners_address[i]+"','"+bidstart+"')"
         print("将结果保存到数据库,sql语句为:"+str(sql))
         cursor.execute(sql)
         db.commit()
