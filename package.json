@@ -9,5 +9,7 @@
   "devDependencies": {
     "truffle-assertions": "^0.9.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "cli-progress": "^3.8.2"
+  }
 }
