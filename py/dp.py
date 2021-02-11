@@ -116,7 +116,7 @@ def min(nums,epsilons):
     data.sort(key=lambda x:x[0],reverse=True)
     lo=data[0][0]
     hi=data[quantity-1][0]
-    size=hi-lo+1
+    size=-(hi-lo+1)
     mid=0
     pos=[0 for i in range(0-size,size)]
     pos1=[0 for i in range(0-size,size)]
