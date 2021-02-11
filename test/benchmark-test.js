@@ -1,5 +1,3 @@
-const truffleAssert = require("truffle-assertions");
-const cliProgress = require("cli-progress");
 const NodeRSA = require("node-rsa");
 
 const databuyer_keys = require("./data-buyer-keys");
