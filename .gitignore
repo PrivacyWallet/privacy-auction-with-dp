@@ -129,8 +129,6 @@ blockchain/history
 
 #truffle
 .tern-port
-yarn.lock
-package-lock.json
 #py
 */__pycache__
 # End of https://www.gitignore.io/api/node,soliditytruffle
